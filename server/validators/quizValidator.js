@@ -1,1 +1,2 @@
-// server/validators/quizValidator.js 
+const Joi = require('joi');
+module.exports = { submitQuizSchema: Joi.object({ answers: Joi.array().items(Joi.object({ questionId: Joi.string().uuid().required(), selectedOptionId: Joi.string().uuid().required() })).min(1).required() }) };
