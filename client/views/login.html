@@ -1,1 +1,58 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - CohortHub</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-logo">CohortHub</div>
+            <h1>Welcome Back</h1>
+            <p class="auth-subtitle">Sign in to continue your learning journey</p>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" required placeholder="you@example.com" autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div style="position: relative;">
+                        <input type="password" id="password" required placeholder="Enter your password" autocomplete="current-password" style="padding-right: 60px;">
+                        <span onclick="togglePassword('password', this)" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 0.8rem; color: var(--accent); font-weight: 500; user-select: none;">
+                            Show
+                        </span>
+                    </div>
+                </div>
+                <div id="errorMessage" class="error-message" style="display: none;"></div>
+                <button type="submit" class="btn-primary">Sign In</button>
+            </form>
+            
+            
+            <p class="auth-footer">
+                <a href="/views/forgot-password.html">Forgot password?</a>
+            </p>
+            <p class="auth-footer">Don't have an account? <a href="/views/register.html">Create one</a></p>
+            <p class="demo-info">Demo: student@cohorthub.com / Student123!</p>
+        </div>
+    </div>
+    
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script>
+    function togglePassword(inputId, element) {
+        const input = document.getElementById(inputId);
+        if (input.type === 'password') {
+            input.type = 'text';
+            element.textContent = 'Hide';
+        } else {
+            input.type = 'password';
+            element.textContent = 'Show';
+        }
+    }
+    </script>
+</body>
+</html>

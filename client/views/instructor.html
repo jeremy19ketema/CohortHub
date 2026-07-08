@@ -1,1 +1,214 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instructor Dashboard - CohortHub</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">CohortHub Instructor</div>
+        <div class="nav-links">
+            <a href="/views/instructor.html" class="nav-link active">My Cohorts</a>
+        </div>
+        <div class="nav-user">
+            <span id="userDisplay"></span>
+            <button id="logoutBtn" class="btn-danger">Sign Out</button>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <div>
+                <h1>Instructor Dashboard</h1>
+                <p style="color: var(--text-secondary);">Manage your cohorts and create new courses</p>
+            </div>
+            <button onclick="showCreateCohortForm()" class="btn-primary" style="width: auto;">
+                + Create New Cohort
+            </button>
+        </div>
+
+        <div id="messageArea"></div>
+
+        
+        <div id="createCohortForm" style="display: none; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; margin-bottom: 2rem;">
+            <h2 style="margin-bottom: 1rem;">Create New Cohort</h2>
+            <form id="newCohortForm">
+                <div class="form-group">
+                    <label for="cohortName">Cohort Name *</label>
+                    <input type="text" id="cohortName" required placeholder="e.g., React for Beginners">
+                </div>
+                <div class="form-group">
+                    <label for="cohortDescription">Description</label>
+                    <textarea id="cohortDescription" rows="3" placeholder="Describe what students will learn..."></textarea>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label for="startDate">Start Date *</label>
+                        <input type="date" id="startDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="endDate">End Date *</label>
+                        <input type="date" id="endDate" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="maxStudents">Max Students</label>
+                    <input type="number" id="maxStudents" value="30" min="1" max="100">
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button type="submit" class="btn-primary">Create Cohort</button>
+                    <button type="button" onclick="hideCreateCohortForm()" class="btn-secondary">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+       
+        <h2 style="margin-bottom: 1rem;">Your Cohorts</h2>
+        <div id="instructorCohorts" class="cohorts-grid"></div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            const user = checkAuth();
+            if (!user || !['instructor', 'admin'].includes(user.role)) {
+                alert('Access denied. Instructor or Admin only.');
+                window.location.href = '/views/dashboard.html';
+                return;
+            }
+
+            document.getElementById('userDisplay').textContent = `${user.firstName} ${user.lastName} (Instructor)`;
+            document.getElementById('logoutBtn').addEventListener('click', function () {
+                api.logout();
+            });
+
+            
+            document.getElementById('newCohortForm').addEventListener('submit', async function (e) {
+                e.preventDefault();
+                await createCohort();
+            });
+
+            await loadInstructorCohorts();
+        });
+
+        async function loadInstructorCohorts() {
+            try {
+                const response = await api.getMyCohorts();
+                const cohorts = response.data.cohorts || [];
+                const container = document.getElementById('instructorCohorts');
+
+                if (cohorts.length === 0) {
+                    container.innerHTML = `
+                        <div style="grid-column: 1/-1; text-align: center; padding: 3rem; background: var(--card); border-radius: 12px; border: 2px dashed var(--border);">
+                            <p style="font-size: 1.25rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                                No Cohorts Created Yet
+                            </p>
+                            <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+                                Create your first cohort to start teaching!
+                            </p>
+                            <button onclick="showCreateCohortForm()" class="btn-primary" style="width: auto;">
+                                + Create Your First Cohort
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = cohorts.map(function (cohort) {
+                    return `
+                        <div class="cohort-card">
+                            <div class="cohort-header">
+                                <h3>${cohort.name}</h3>
+                                <span class="status-badge active">${cohort.enrollment_status}</span>
+                            </div>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.75rem;">
+                                ${cohort.description || 'No description'}
+                            </p>
+                            <div style="display: flex; gap: 1rem; margin-bottom: 0.75rem; font-size: 0.85rem; color: var(--text-secondary);">
+                                <span>📅 ${new Date(cohort.start_date).toLocaleDateString()} - ${new Date(cohort.end_date).toLocaleDateString()}</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress" style="width: ${cohort.progress || 0}%"></div>
+                            </div>
+                            <p style="font-size: 0.85rem; color: var(--accent); margin-top: 0.5rem; font-weight: 600;">
+                                Avg Student Progress: ${Math.round(cohort.progress || 0)}%
+                            </p>
+                            <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                                <button onclick="window.location.href='/views/cohort.html?id=${cohort.id}'" 
+                                    class="btn-primary" style="font-size: 0.85rem;">
+                                    View Cohort
+                                </button>
+                                <button onclick="deleteCohort('${cohort.id}', '${cohort.name}')" 
+                                    class="btn-danger" style="font-size: 0.85rem;">
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                document.getElementById('instructorCohorts').innerHTML = `
+                    <div class="error-message">Failed to load cohorts: ${error.message}</div>
+                `;
+            }
+        }
+
+        async function createCohort() {
+            const name = document.getElementById('cohortName').value.trim();
+            const description = document.getElementById('cohortDescription').value.trim();
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const maxStudents = parseInt(document.getElementById('maxStudents').value) || 30;
+
+            if (!name || !startDate || !endDate) {
+                showMessage('Please fill in all required fields.', 'error');
+                return;
+            }
+
+            try {
+                await api.createCohort({ name, description, startDate, endDate, maxStudents });
+                showMessage('Cohort created successfully!', 'success');
+                hideCreateCohortForm();
+                document.getElementById('newCohortForm').reset();
+                await loadInstructorCohorts();
+            } catch (error) {
+                showMessage('Failed to create cohort: ' + error.message, 'error');
+            }
+        }
+
+        async function deleteCohort(cohortId, cohortName) {
+            if (!confirm(`Are you sure you want to delete "${cohortName}"? This will remove all modules, quizzes, and student data.`)) {
+                return;
+            }
+            try {
+                await api.deleteCohort(cohortId);
+                showMessage('Cohort deleted.', 'success');
+                await loadInstructorCohorts();
+            } catch (error) {
+                showMessage('Failed to delete: ' + error.message, 'error');
+            }
+        }
+
+        function showCreateCohortForm() {
+            document.getElementById('createCohortForm').style.display = 'block';
+        }
+
+        function hideCreateCohortForm() {
+            document.getElementById('createCohortForm').style.display = 'none';
+        }
+
+        function showMessage(message, type) {
+            const area = document.getElementById('messageArea');
+            area.innerHTML = `
+                <div class="${type === 'success' ? 'success-message' : 'error-message'}" style="margin-bottom: 1rem;">
+                    ${message}
+                </div>
+            `;
+            setTimeout(function () { area.innerHTML = ''; }, 4000);
+        }
+    </script>
+</body>
+</html>

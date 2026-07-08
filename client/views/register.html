@@ -1,1 +1,115 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account - CohortHub</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-logo">CohortHub</div>
+            <h1>Create Account</h1>
+            <p class="auth-subtitle">Join CohortHub and start learning today</p>
+            
+            <form id="registerForm">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                    <div class="form-group">
+                        <label for="firstName">First Name</label>
+                        <input type="text" id="firstName" required placeholder="John">
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">Last Name</label>
+                        <input type="text" id="lastName" required placeholder="Doe">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" required placeholder="you@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div style="position: relative;">
+                        <input type="password" id="password" required minlength="8" placeholder="Minimum 8 characters" autocomplete="new-password" style="padding-right: 60px;">
+                        <span onclick="togglePassword('password', this)" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 0.8rem; color: var(--accent); font-weight: 500; user-select: none;">
+                            Show
+                        </span>
+                    </div>
+                    
+                    <div id="passwordRequirements" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.4rem;">
+                        <span id="reqLength" style="display: block;">✓ 8+ characters</span>
+                        <span id="reqUppercase" style="display: block;">✗ At least 1 uppercase letter</span>
+                        <span id="reqLowercase" style="display: block;">✗ At least 1 lowercase letter</span>
+                        <span id="reqNumber" style="display: block;">✗ At least 1 number</span>
+                        <span id="reqSpecial" style="display: block;">✗ At least 1 special character (!@#$%^&*)</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <div style="position: relative;">
+                        <input type="password" id="confirmPassword" required placeholder="Re-enter your password" autocomplete="new-password" style="padding-right: 60px;">
+                        <span onclick="togglePassword('confirmPassword', this)" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 0.8rem; color: var(--accent); font-weight: 500; user-select: none;">
+                            Show
+                        </span>
+                    </div>
+                </div>
+                <div id="errorMessage" class="error-message" style="display: none;"></div>
+                <button type="submit" class="btn-primary">Create Account</button>
+            </form>
+            
+            <p class="auth-footer">Already have an account? <a href="/views/login.html">Sign in</a></p>
+        </div>
+    </div>
+    
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script>
+    function togglePassword(inputId, element) {
+        const input = document.getElementById(inputId);
+        if (input.type === 'password') {
+            input.type = 'text';
+            element.textContent = 'Hide';
+        } else {
+            input.type = 'password';
+            element.textContent = 'Show';
+        }
+    }
+
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        const passwordInput = document.getElementById('password');
+        const confirmInput = document.getElementById('confirmPassword');
+        
+        
+        passwordInput.addEventListener('input', function() {
+            const password = this.value;
+            
+            
+            document.getElementById('reqLength').style.color = password.length >= 8 ? 'var(--green)' : 'var(--text-muted)';
+            document.getElementById('reqLength').textContent = password.length >= 8 ? '✓ 8+ characters' : '✗ 8+ characters';
+            
+            
+            const hasUpper = /[A-Z]/.test(password);
+            document.getElementById('reqUppercase').style.color = hasUpper ? 'var(--green)' : 'var(--text-muted)';
+            document.getElementById('reqUppercase').textContent = hasUpper ? '✓ At least 1 uppercase letter' : '✗ At least 1 uppercase letter';
+            
+           
+            const hasLower = /[a-z]/.test(password);
+            document.getElementById('reqLowercase').style.color = hasLower ? 'var(--green)' : 'var(--text-muted)';
+            document.getElementById('reqLowercase').textContent = hasLower ? '✓ At least 1 lowercase letter' : '✗ At least 1 lowercase letter';
+            
+            
+            const hasNumber = /[0-9]/.test(password);
+            document.getElementById('reqNumber').style.color = hasNumber ? 'var(--green)' : 'var(--text-muted)';
+            document.getElementById('reqNumber').textContent = hasNumber ? '✓ At least 1 number' : '✗ At least 1 number';
+            
+            
+            const hasSpecial = /[!@#$%^&*]/.test(password);
+            document.getElementById('reqSpecial').style.color = hasSpecial ? 'var(--green)' : 'var(--text-muted)';
+            document.getElementById('reqSpecial').textContent = hasSpecial ? '✓ At least 1 special character (!@#$%^&*)' : '✗ At least 1 special character (!@#$%^&*)';
+        });
+    });
+</script>
+</body>
+</html>

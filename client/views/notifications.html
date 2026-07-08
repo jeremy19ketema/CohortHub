@@ -1,1 +1,88 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications - CohortHub</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand" onclick="window.location.href='/views/dashboard.html'" style="cursor: pointer;">
+            CohortHub
+        </div>
+        <div class="nav-links">
+            <a href="/views/dashboard.html" class="nav-link">Dashboard</a>
+            <a href="/views/courses.html" class="nav-link">Browse Courses</a>
+            <a href="/views/certificate.html" class="nav-link">My Certificates</a>
+        </div>
+        <div class="nav-user">
+            <span id="userDisplay"></span>
+            <button id="logoutBtn" class="btn-danger">Sign Out</button>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <button onclick="window.location.href='/views/dashboard.html'" class="btn-secondary" style="width: auto; margin-bottom: 1.5rem;">
+            ← Back to Dashboard
+        </button>
+
+        <h1>Notifications</h1>
+        <div id="notificationsList" style="margin-top: 1rem;"></div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            const user = checkAuth();
+            if (!user) return;
+
+            document.getElementById('userDisplay').textContent = `${user.firstName} ${user.lastName}`;
+            document.getElementById('logoutBtn').addEventListener('click', function () {
+                api.logout();
+            });
+
+            try {
+                const response = await api.getNotifications();
+                const notifications = response.data.notifications || [];
+                const container = document.getElementById('notificationsList');
+
+                if (notifications.length === 0) {
+                    container.innerHTML = `
+                        <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">
+                            No notifications yet.
+                        </p>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = notifications.map(function (notification) {
+                    return `
+                        <div class="notification-item" 
+                             style="border-left: 4px solid ${notification.is_read ? 'var(--border)' : 'var(--accent)'}; cursor: pointer;" 
+                             onclick="markAsRead('${notification.id}')">
+                            <strong>${notification.title}</strong>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0.25rem 0;">
+                                ${notification.message}
+                            </p>
+                            <small style="color: var(--text-muted);">
+                                ${new Date(notification.created_at).toLocaleString()}
+                            </small>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                document.getElementById('notificationsList').innerHTML = `
+                    <div class="error-message">Failed to load notifications: ${error.message}</div>
+                `;
+            }
+        });
+
+        async function markAsRead(notificationId) {
+            await api.markNotificationRead(notificationId);
+            location.reload();
+        }
+    </script>
+</body>
+</html>
