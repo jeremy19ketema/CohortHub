@@ -20,9 +20,9 @@ DELETE FROM users;
 
 
 INSERT INTO users (email, password_hash, first_name, last_name, role) VALUES
-('admin@cohorthub.com', '$2a$12$p8MKsCAlRT3fEifE48j83e0mujjpvPKnethkwjAZ1Hy8uc7lHBLUG', 'Admin', 'User', 'admin'),
-('instructor@cohorthub.com', '$2a$12$YUOBoPCiAsufeyCKwqTJlOZI0lswd8iQY1PPj1WTAj7N2EQtEzHn2', 'Nardos', 'Alemu', 'instructor'),
-('student@cohorthub.com', '$2a$12$wqe88aabIykc8YGcGAEwpeJoDJhQMLRmjyKbTdV4cU/Sm7SS4SEDS', 'Adonay', 'Abebe', 'student');
+('admin@cohorthub.com', '$2a$12$ByqDetrSYhTe0fDtcraZ7.y54C3B.8CuQ5nNpquzaafH0JNuL0A2a', 'Admin', 'User', 'admin'),
+('instructor@cohorthub.com', '$2a$12$WRYAnJM3Mih3A1vgOIM/Tur0rGz/vdXbxmYAr.vq3GCyev.KfjIUq', 'Nardos', 'Alemu', 'instructor'),
+('student@cohorthub.com', '$2a$12$TwN96uenKee6yhANQpoQ8OWfHH5JCkEv7qocibIOW3rR0LFTZKJlW', 'Adonay', 'Abebe', 'student');
 
 INSERT INTO user_profiles (user_id, bio) 
 SELECT id, 'Platform Administrator' FROM users WHERE email = 'admin@cohorthub.com';

@@ -146,7 +146,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                                         year: 'numeric', month: 'long', day: 'numeric'
                                     })}
                                 </p>
-                                <button onclick="window.downloadCertificate('${cert.id}')" class="btn-primary" id="dashDownloadBtn-${cert.id}">
+                                <button onclick="downloadCertificate('${cert.id}')" class="btn-primary" id="dashDownloadBtn-${cert.id}">
                                     📥 Download PDF Certificate
                                 </button>
                                 <div id="dashDownloadStatus-${cert.id}" style="margin-top: 0.5rem; display: none;"></div>
@@ -171,8 +171,10 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 });
 
-
-window.downloadCertificate = async function(certId) {
+// ===== CERTIFICATE DOWNLOAD FUNCTION =====
+async function downloadCertificate(certId) {
+    console.log('📥 Downloading certificate:', certId);
+    
     const btn = document.getElementById(`dashDownloadBtn-${certId}`);
     const statusDiv = document.getElementById(`dashDownloadStatus-${certId}`);
     
@@ -180,7 +182,6 @@ window.downloadCertificate = async function(certId) {
         console.error('Download button not found for certificate:', certId);
         return;
     }
-    
     
     const originalText = btn.textContent;
     btn.disabled = true;
@@ -215,9 +216,11 @@ window.downloadCertificate = async function(certId) {
             alert('Failed to download certificate: ' + error.message);
         }
     } finally {
-       
         btn.disabled = false;
         btn.textContent = originalText;
         btn.style.opacity = '1';
     }
-};
+}
+
+// Make it globally accessible
+window.downloadCertificate = downloadCertificate;

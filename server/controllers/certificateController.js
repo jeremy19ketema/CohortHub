@@ -21,24 +21,24 @@ exports.generateCertificatePDF = asyncHandler(async (req, res) => {
       margin: 50
     });
     
-   
+    
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=certificate-${cert.certificate_number}.pdf`);
     
     
     doc.pipe(res);
     
-   
+    
     doc.rect(40, 40, doc.page.width - 80, doc.page.height - 80)
        .lineWidth(4)
        .stroke('#24443B');
     
-    
+  
     doc.rect(50, 50, doc.page.width - 100, doc.page.height - 100)
        .lineWidth(1)
        .stroke('#24443B');
     
-    
+   
     doc.fontSize(42)
        .font('Helvetica-Bold')
        .fillColor('#24443B')
@@ -76,7 +76,7 @@ exports.generateCertificatePDF = asyncHandler(async (req, res) => {
          align: 'center'
        });
     
-    
+   
     const issueDate = new Date(cert.issue_date).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
@@ -96,7 +96,7 @@ exports.generateCertificatePDF = asyncHandler(async (req, res) => {
        .fillColor('#999')
        .text(`Certificate #: ${cert.certificate_number}`, 50, doc.page.height - 60);
     
-
+  
     doc.fontSize(12)
        .font('Helvetica')
        .fillColor('#24443B')

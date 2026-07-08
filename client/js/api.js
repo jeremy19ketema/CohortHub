@@ -82,7 +82,7 @@ class API {
         window.location.href = '/views/login.html';
     }
 
-    
+    // Auth
     async login(email, password) {
         const data = await this.request('/auth/login', {
             method: 'POST',
@@ -101,7 +101,7 @@ class API {
         return data;
     }
 
-    
+    // User
     async getProfile() {
         return await this.request('/users/profile');
     }
@@ -139,7 +139,7 @@ class API {
         return await this.request('/users');
     }
 
-    
+    // Cohorts
     async getAllCohorts(search = '') {
         const query = search ? `?search=${encodeURIComponent(search)}` : '';
         return await this.request(`/cohorts${query}`);
@@ -159,7 +159,7 @@ class API {
         });
     }
 
-    
+    // Modules
     async getModules(cohortId) {
         return await this.request(`/modules/cohort/${cohortId}`);
     }
@@ -168,7 +168,7 @@ class API {
         return await this.request(`/modules/${id}`);
     }
 
-    
+    // Quizzes
     async getQuiz(moduleId) {
         return await this.request(`/quizzes/module/${moduleId}`);
     }
@@ -180,7 +180,7 @@ class API {
         });
     }
 
-    
+    // Content Blocks
     async createContentBlock(moduleId, data) {
         return await this.request(`/modules/${moduleId}/content`, {
             method: 'POST',
@@ -193,63 +193,59 @@ class API {
             method: 'DELETE'
         });
     }
-    
+
+    // Certificates
     async getCertificates() {
         return await this.request('/certificates');
     }
 
-    
-async getCertificatePDF(id) {
-    try {
-        const token = localStorage.getItem('accessToken');
-        if (!token) {
-            throw new Error('Please log in first');
-        }
-
-        const response = await fetch(`${this.baseURL}/certificates/${id}/pdf`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Accept': 'application/pdf'
+    async getCertificatePDF(id) {
+        try {
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                throw new Error('Please log in first');
             }
-        });
 
-        if (!response.ok) {
-            let errorMessage = 'Failed to download certificate';
-            try {
-                const data = await response.json();
-                errorMessage = data.message || errorMessage;
-            } catch (e) {
-                errorMessage = response.statusText || errorMessage;
+            const response = await fetch(`${this.baseURL}/certificates/${id}/pdf`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/pdf'
+                }
+            });
+
+            if (!response.ok) {
+                let errorMessage = 'Failed to download certificate';
+                try {
+                    const data = await response.json();
+                    errorMessage = data.message || errorMessage;
+                } catch (e) {
+                    errorMessage = response.statusText || errorMessage;
+                }
+                throw new Error(errorMessage);
             }
-            throw new Error(errorMessage);
-        }
 
-        
-        const blob = await response.blob();
-        
-        
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `certificate-${id}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        
-        
-        setTimeout(() => {
-            window.URL.revokeObjectURL(url);
-        }, 100);
-        
-        return true;
-    } catch (error) {
-        console.error('Download error:', error);
-        throw error;
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `certificate-${id}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            setTimeout(() => {
+                window.URL.revokeObjectURL(url);
+            }, 100);
+            
+            return true;
+        } catch (error) {
+            console.error('Download error:', error);
+            throw error;
+        }
     }
-}
 
-    
+    // Discussions
     async getDiscussions(cohortId) {
         return await this.request(`/discussions/cohort/${cohortId}`);
     }
@@ -268,11 +264,12 @@ async getCertificatePDF(id) {
         });
     }
 
-    
+    // Announcements
     async getAnnouncements(cohortId) {
         return await this.request(`/announcements/cohort/${cohortId}`);
     }
 
+    // Admin
     async updateUserRole(userId, role) {
         return await this.request(`/users/${userId}/role`, {
             method: 'PATCH',
@@ -308,11 +305,10 @@ async getCertificatePDF(id) {
 
 const api = new API();
 
-
+// Toast notification system
 window.showToast = function(icon, title, message, type = 'info') {
     const container = document.getElementById('toastContainer');
     if (!container) {
-        
         const newContainer = document.createElement('div');
         newContainer.id = 'toastContainer';
         newContainer.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; max-width: 400px; width: 100%;';
@@ -336,7 +332,6 @@ window.showToast = function(icon, title, message, type = 'info') {
     `;
     
     toastContainer.appendChild(toast);
-    
     
     setTimeout(() => {
         dismissToast(id);
