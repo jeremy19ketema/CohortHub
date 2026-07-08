@@ -1,0 +1,1 @@
+// scripts/hash-generator.js 
