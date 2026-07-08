@@ -1,1 +1,10 @@
-// server/routes/discussions.js 
+const express = require('express');
+const router = express.Router();
+const discussionController = require('../controllers/discussionController');
+const { authenticate } = require('../middleware/auth');
+router.use(authenticate);
+router.get('/cohort/:cohortId', discussionController.getDiscussions);
+router.get('/:id', discussionController.getDiscussion);
+router.post('/cohort/:cohortId', discussionController.createDiscussion);
+router.post('/:id/reply', discussionController.addReply);
+module.exports = router;

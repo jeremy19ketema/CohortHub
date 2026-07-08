@@ -1,1 +1,11 @@
-// server/routes/quizzes.js 
+const express = require('express');
+const router = express.Router();
+const quizController = require('../controllers/quizController');
+const { authenticate } = require('../middleware/auth');
+const { validate } = require('../middleware/validate');
+const { submitQuizSchema } = require('../validators/quizValidator');
+const { quizLimiter } = require('../middleware/rateLimiter');
+router.use(authenticate);
+router.get('/module/:moduleId', quizController.getQuiz);
+router.post('/:id/submit', quizLimiter, validate(submitQuizSchema), quizController.submitQuiz);
+module.exports = router;
