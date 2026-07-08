@@ -1,1 +1,109 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Certificates - CohortHub</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand" onclick="window.location.href='/views/dashboard.html'" style="cursor: pointer;">
+            CohortHub
+        </div>
+        <div class="nav-links">
+            <a href="/views/dashboard.html" class="nav-link">Dashboard</a>
+            <a href="/views/courses.html" class="nav-link">Browse Courses</a>
+            <a href="/views/certificate.html" class="nav-link active">My Certificates</a>
+        </div>
+        <div class="nav-user">
+            <span id="userDisplay"></span>
+            <button id="logoutBtn" class="btn-danger">Sign Out</button>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <div>
+                <h1>My Certificates</h1>
+                <p style="color: var(--text-secondary);">Certificates earned upon completing cohorts</p>
+            </div>
+            <button onclick="window.location.href='/views/dashboard.html'" class="btn-secondary" style="width: auto;">
+                ← Back to Dashboard
+            </button>
+        </div>
+
+        <div id="certificatesList" class="cohorts-grid"></div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            const user = checkAuth();
+            if (!user) return;
+
+            document.getElementById('userDisplay').textContent = `${user.firstName} ${user.lastName}`;
+            document.getElementById('logoutBtn').addEventListener('click', function () {
+                api.logout();
+            });
+
+            try {
+                const response = await api.getCertificates();
+                const certificates = response.data.certificates || [];
+                const container = document.getElementById('certificatesList');
+
+                if (certificates.length === 0) {
+                    container.innerHTML = `
+                        <div style="grid-column: 1/-1; text-align: center; padding: 3rem; background: var(--card); border-radius: 12px; border: 2px dashed var(--border);">
+                            <p style="font-size: 1.25rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
+                                No Certificates Yet
+                            </p>
+                            <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+                                Complete a cohort to earn your certificate!
+                            </p>
+                            <a href="/views/courses.html" class="btn-primary" style="width: auto; display: inline-block; text-decoration: none;">
+                                Browse Courses
+                            </a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = certificates.map(function (cert) {
+                    return `
+                        <div class="cohort-card">
+                            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                                <span style="font-size: 2.5rem;">📜</span>
+                                <div>
+                                    <h3 style="margin-bottom: 0.25rem;">${cert.cohort_name}</h3>
+                                    <span class="status-badge completed">Completed</span>
+                                </div>
+                            </div>
+                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
+                                Certificate #: ${cert.certificate_number}
+                            </p>
+                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                                Issued: ${new Date(cert.issue_date).toLocaleDateString('en-US', {
+                                    weekday: 'long',
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
+                                })}
+                            </p>
+                            <button onclick="window.downloadCertificate('${cert.id}')" class="btn-primary" id="dashDownloadBtn-${cert.id}">
+                                📥 Download PDF Certificate
+                            </button>
+                            <div id="dashDownloadStatus-${cert.id}" style="margin-top: 0.5rem; display: none;"></div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                document.getElementById('certificatesList').innerHTML = `
+                    <div class="error-message">Failed to load certificates: ${error.message}</div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

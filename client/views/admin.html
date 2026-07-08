@@ -1,1 +1,171 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - CohortHub</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">CohortHub Admin</div>
+        <div class="nav-links">
+            <a href="/views/admin.html" class="nav-link active">Manage Users</a>
+        </div>
+        <div class="nav-user">
+            <span id="userDisplay"></span>
+            <button id="logoutBtn" class="btn-danger">Sign Out</button>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <h1>Admin Panel - User Management</h1>
+        <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+            Manage all users, change roles, and control account access
+        </p>
+
+        <div id="messageArea"></div>
+        <div id="usersList"></div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            const user = checkAuth();
+            if (!user || user.role !== 'admin') {
+                alert('Access denied. Admin only.');
+                window.location.href = '/views/dashboard.html';
+                return;
+            }
+
+            document.getElementById('userDisplay').textContent = `${user.firstName} ${user.lastName} (Admin)`;
+            document.getElementById('logoutBtn').addEventListener('click', function () {
+                api.logout();
+            });
+
+            await loadUsers();
+        });
+
+        async function loadUsers() {
+            try {
+                const response = await api.getAllUsers();
+                const users = response.data.users;
+
+                document.getElementById('usersList').innerHTML = `
+                    <div style="background: var(--card); border-radius: 12px; overflow: hidden; border: 1px solid var(--border);">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: var(--bg);">
+                                    <th style="padding: 1rem; text-align: left; color: var(--text-secondary);">Name</th>
+                                    <th style="padding: 1rem; text-align: left; color: var(--text-secondary);">Email</th>
+                                    <th style="padding: 1rem; text-align: left; color: var(--text-secondary);">Role</th>
+                                    <th style="padding: 1rem; text-align: left; color: var(--text-secondary);">Status</th>
+                                    <th style="padding: 1rem; text-align: left; color: var(--text-secondary);">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${users.map(function (u) {
+                                    return `
+                                        <tr style="border-top: 1px solid var(--border);" id="user-row-${u.id}">
+                                            <td style="padding: 1rem;">
+                                                <strong>${u.first_name} ${u.last_name}</strong>
+                                                ${u.bio ? `<br><small style="color: var(--text-muted);">${u.bio}</small>` : ''}
+                                            </td>
+                                            <td style="padding: 1rem; color: var(--text-secondary);">${u.email}</td>
+                                            <td style="padding: 1rem;">
+                                                <select id="role-${u.id}" onchange="changeRole('${u.id}')" 
+                                                    style="background: var(--input); border: 1px solid var(--border); color: var(--text); padding: 0.4rem 0.75rem; border-radius: 6px; font-size: 0.85rem;">
+                                                    <option value="student" ${u.role === 'student' ? 'selected' : ''}>Student</option>
+                                                    <option value="instructor" ${u.role === 'instructor' ? 'selected' : ''}>Instructor</option>
+                                                    <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
+                                                </select>
+                                            </td>
+                                            <td style="padding: 1rem;">
+                                                <span style="color: ${u.is_active ? 'var(--green)' : 'var(--red)'}; font-weight: 600;">
+                                                    ${u.is_active ? 'Active' : 'Inactive'}
+                                                </span>
+                                            </td>
+                                            <td style="padding: 1rem;">
+                                                <div style="display: flex; gap: 0.5rem;">
+                                                    <button onclick="toggleUserStatus('${u.id}')" 
+                                                        style="padding: 0.4rem 0.75rem; border-radius: 6px; border: 1px solid var(--border); cursor: pointer; font-size: 0.8rem; background: ${u.is_active ? 'var(--red-bg)' : 'var(--green-bg)'}; color: ${u.is_active ? 'var(--red)' : 'var(--green)'};">
+                                                        ${u.is_active ? 'Deactivate' : 'Activate'}
+                                                    </button>
+                                                    <button onclick="deleteUser('${u.id}', '${u.first_name} ${u.last_name}')" 
+                                                        style="padding: 0.4rem 0.75rem; border-radius: 6px; border: 1px solid var(--red); cursor: pointer; font-size: 0.8rem; background: var(--red-bg); color: var(--red);">
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('usersList').innerHTML = `
+                    <div class="error-message">Failed to load users: ${error.message}</div>
+                `;
+            }
+        }
+
+        async function changeRole(userId) {
+            const select = document.getElementById('role-' + userId);
+            const newRole = select.value;
+
+            if (!confirm(`Change this user's role to "${newRole}"?`)) {
+                await loadUsers();
+                return;
+            }
+
+            try {
+                await api.updateUserRole(userId, newRole);
+                showMessage('Role updated successfully!', 'success');
+            } catch (error) {
+                showMessage('Failed to update role: ' + error.message, 'error');
+                await loadUsers();
+            }
+        }
+
+        async function toggleUserStatus(userId) {
+            try {
+                const response = await api.toggleUserStatus(userId);
+                const user = response.data.user;
+                showMessage(`User ${user.is_active ? 'activated' : 'deactivated'} successfully!`, 'success');
+                await loadUsers();
+            } catch (error) {
+                showMessage('Failed to toggle status: ' + error.message, 'error');
+            }
+        }
+
+        async function deleteUser(userId, userName) {
+            if (!confirm(`Are you sure you want to permanently delete "${userName}"? This cannot be undone.`)) {
+                return;
+            }
+
+            try {
+                await api.deleteUser(userId);
+                showMessage('User deleted permanently!', 'success');
+                document.getElementById('user-row-' + userId).remove();
+            } catch (error) {
+                showMessage('Failed to delete user: ' + error.message, 'error');
+            }
+        }
+
+        function showMessage(message, type) {
+            const area = document.getElementById('messageArea');
+            area.innerHTML = `
+                <div class="${type === 'success' ? 'success-message' : 'error-message'}" style="margin-bottom: 1rem;">
+                    ${message}
+                </div>
+            `;
+            setTimeout(function () {
+                area.innerHTML = '';
+            }, 4000);
+        }
+    </script>
+</body>
+</html>
