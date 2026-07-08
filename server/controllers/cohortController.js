@@ -21,27 +21,6 @@ exports.getMyCohorts = asyncHandler(async (req, res) => {
 exports.getCohort = asyncHandler(async (req, res) => {
   const cohort = await Cohort.findById(req.params.id);
   if (!cohort) throw new AppError('Cohort not found', 404);
-  
-  
-  const lecturerInfo = await db.query(
-    `SELECT 
-      u.id, 
-      u.first_name, 
-      u.last_name, 
-      u.avatar_url,
-      up.bio,
-      up.phone,
-      up.github_url,
-      up.linkedin_url,
-      up.website
-     FROM users u
-     LEFT JOIN user_profiles up ON u.id = up.user_id
-     WHERE u.id = $1`,
-    [cohort.instructor_id]
-  );
-  
-  cohort.lecturer = lecturerInfo.rows[0] || null;
-  
   res.json({ status: 'success', data: { cohort } });
 });
 
@@ -55,7 +34,7 @@ exports.enrollInCohort = asyncHandler(async (req, res) => {
 });
 
 exports.createCohort = asyncHandler(async (req, res) => {
-  const { name, description, startDate, endDate, maxStudents, about, requirements, whatYouWillLearn } = req.body;
+  const { name, description, about, requirements, whatYouWillLearn, startDate, endDate, maxStudents } = req.body;
   
   if (!name || !startDate || !endDate) {
     throw new AppError('Name, start date, and end date are required', 400);
@@ -64,27 +43,37 @@ exports.createCohort = asyncHandler(async (req, res) => {
   const cohort = await Cohort.create({
     name,
     description: description || '',
+    about: about || '',
+    requirements: requirements || '',
+    whatYouWillLearn: whatYouWillLearn || '',
     startDate,
     endDate,
     instructorId: req.user.id,
-    maxStudents: maxStudents || 30,
-    about: about || '',
-    requirements: requirements || '',
-    whatYouWillLearn: whatYouWillLearn || ''
+    maxStudents: maxStudents || 30
   });
   
   res.status(201).json({ status: 'success', data: { cohort } });
 });
 
 exports.updateCohort = asyncHandler(async (req, res) => {
-  const cohort = await Cohort.findById(req.params.id);
+  const { id } = req.params;
+  const { name, description, about, requirements, what_you_will_learn } = req.body;
+  
+  const cohort = await Cohort.findById(id);
   if (!cohort) throw new AppError('Cohort not found', 404);
   
   if (cohort.instructor_id !== req.user.id && req.user.role !== 'admin') {
     throw new AppError('You are not authorized to update this cohort', 403);
   }
   
-  const updated = await Cohort.update(req.params.id, req.body);
+  const updated = await Cohort.update(id, { 
+    name, 
+    description, 
+    about, 
+    requirements, 
+    what_you_will_learn 
+  });
+  
   res.json({ status: 'success', data: { cohort: updated } });
 });
 

@@ -11,6 +11,7 @@
         <div class="nav-brand">CohortHub Instructor</div>
         <div class="nav-links">
             <a href="/views/instructor.html" class="nav-link active">My Cohorts</a>
+            <a href="/views/admin-content.html" class="nav-link">Manage Content</a>
         </div>
         <div class="nav-user">
             <span id="userDisplay"></span>
@@ -36,12 +37,24 @@
             <h2 style="margin-bottom: 1rem;">Create New Cohort</h2>
             <form id="newCohortForm">
                 <div class="form-group">
-                    <label for="cohortName">Cohort Name *</label>
+                    <label for="cohortName">Course Name *</label>
                     <input type="text" id="cohortName" required placeholder="e.g., React for Beginners">
                 </div>
                 <div class="form-group">
-                    <label for="cohortDescription">Description</label>
-                    <textarea id="cohortDescription" rows="3" placeholder="Describe what students will learn..."></textarea>
+                    <label for="cohortDescription">Short Description *</label>
+                    <textarea id="cohortDescription" rows="2" required placeholder="Brief description of the course"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="cohortAbout">About This Course</label>
+                    <textarea id="cohortAbout" rows="4" placeholder="Detailed description of the course content and goals..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="cohortRequirements">Requirements / Prerequisites</label>
+                    <textarea id="cohortRequirements" rows="3" placeholder="What students should know before taking this course..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="cohortLearn">What You Will Learn</label>
+                    <textarea id="cohortLearn" rows="4" placeholder="List the learning outcomes (one per line)..."></textarea>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="form-group">
@@ -64,7 +77,39 @@
             </form>
         </div>
 
-       
+        
+        <div id="editCohortForm" style="display: none; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; margin-bottom: 2rem;">
+            <h2 style="margin-bottom: 1rem;">Edit Cohort</h2>
+            <form id="editCohortFormInner">
+                <input type="hidden" id="editCohortId">
+                <div class="form-group">
+                    <label for="editCohortName">Course Name *</label>
+                    <input type="text" id="editCohortName" required placeholder="e.g., React for Beginners">
+                </div>
+                <div class="form-group">
+                    <label for="editCohortDescription">Short Description *</label>
+                    <textarea id="editCohortDescription" rows="2" required placeholder="Brief description of the course"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editCohortAbout">About This Course</label>
+                    <textarea id="editCohortAbout" rows="4" placeholder="Detailed description of the course content and goals..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editCohortRequirements">Requirements / Prerequisites</label>
+                    <textarea id="editCohortRequirements" rows="3" placeholder="What students should know before taking this course..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editCohortLearn">What You Will Learn</label>
+                    <textarea id="editCohortLearn" rows="4" placeholder="List the learning outcomes (one per line)..."></textarea>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button type="submit" class="btn-primary">Update Cohort</button>
+                    <button type="button" onclick="hideEditCohortForm()" class="btn-secondary">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+        
         <h2 style="margin-bottom: 1rem;">Your Cohorts</h2>
         <div id="instructorCohorts" class="cohorts-grid"></div>
     </div>
@@ -89,6 +134,12 @@
             document.getElementById('newCohortForm').addEventListener('submit', async function (e) {
                 e.preventDefault();
                 await createCohort();
+            });
+
+            
+            document.getElementById('editCohortFormInner').addEventListener('submit', async function (e) {
+                e.preventDefault();
+                await updateCohort();
             });
 
             await loadInstructorCohorts();
@@ -127,6 +178,14 @@
                             <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.75rem;">
                                 ${cohort.description || 'No description'}
                             </p>
+                            ${cohort.about ? `
+                                <details style="margin-bottom: 0.75rem;">
+                                    <summary style="cursor: pointer; color: var(--accent); font-weight: 600; font-size: 0.85rem;">📖 About this course</summary>
+                                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem; padding: 0.5rem; background: var(--surface); border-radius: 4px;">
+                                        ${cohort.about}
+                                    </p>
+                                </details>
+                            ` : ''}
                             <div style="display: flex; gap: 1rem; margin-bottom: 0.75rem; font-size: 0.85rem; color: var(--text-secondary);">
                                 <span>📅 ${new Date(cohort.start_date).toLocaleDateString()} - ${new Date(cohort.end_date).toLocaleDateString()}</span>
                             </div>
@@ -136,10 +195,18 @@
                             <p style="font-size: 0.85rem; color: var(--accent); margin-top: 0.5rem; font-weight: 600;">
                                 Avg Student Progress: ${Math.round(cohort.progress || 0)}%
                             </p>
-                            <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                            <div style="margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
                                 <button onclick="window.location.href='/views/cohort.html?id=${cohort.id}'" 
                                     class="btn-primary" style="font-size: 0.85rem;">
                                     View Cohort
+                                </button>
+                                <button onclick="showEditCohortForm('${cohort.id}')" 
+                                    class="btn-secondary" style="font-size: 0.85rem;">
+                                    ✏️ Edit
+                                </button>
+                                <button onclick="window.location.href='/views/admin-content.html?cohort=${cohort.id}'" 
+                                    class="btn-secondary" style="font-size: 0.85rem;">
+                                    📚 Add Content
                                 </button>
                                 <button onclick="deleteCohort('${cohort.id}', '${cohort.name}')" 
                                     class="btn-danger" style="font-size: 0.85rem;">
@@ -159,17 +226,29 @@
         async function createCohort() {
             const name = document.getElementById('cohortName').value.trim();
             const description = document.getElementById('cohortDescription').value.trim();
+            const about = document.getElementById('cohortAbout').value.trim();
+            const requirements = document.getElementById('cohortRequirements').value.trim();
+            const whatYouWillLearn = document.getElementById('cohortLearn').value.trim();
             const startDate = document.getElementById('startDate').value;
             const endDate = document.getElementById('endDate').value;
             const maxStudents = parseInt(document.getElementById('maxStudents').value) || 30;
 
-            if (!name || !startDate || !endDate) {
-                showMessage('Please fill in all required fields.', 'error');
+            if (!name || !description || !startDate || !endDate) {
+                showMessage('Please fill in all required fields (Name, Description, Start Date, End Date).', 'error');
                 return;
             }
 
             try {
-                await api.createCohort({ name, description, startDate, endDate, maxStudents });
+                await api.createCohort({ 
+                    name, 
+                    description, 
+                    about,
+                    requirements,
+                    whatYouWillLearn,
+                    startDate, 
+                    endDate, 
+                    maxStudents 
+                });
                 showMessage('Cohort created successfully!', 'success');
                 hideCreateCohortForm();
                 document.getElementById('newCohortForm').reset();
@@ -177,6 +256,59 @@
             } catch (error) {
                 showMessage('Failed to create cohort: ' + error.message, 'error');
             }
+        }
+
+        async function updateCohort() {
+            const id = document.getElementById('editCohortId').value;
+            const name = document.getElementById('editCohortName').value.trim();
+            const description = document.getElementById('editCohortDescription').value.trim();
+            const about = document.getElementById('editCohortAbout').value.trim();
+            const requirements = document.getElementById('editCohortRequirements').value.trim();
+            const whatYouWillLearn = document.getElementById('editCohortLearn').value.trim();
+
+            if (!name || !description) {
+                showMessage('Please fill in Name and Description.', 'error');
+                return;
+            }
+
+            try {
+                await api.updateCohort(id, { 
+                    name, 
+                    description, 
+                    about,
+                    requirements,
+                    what_you_will_learn: whatYouWillLearn
+                });
+                showMessage('Cohort updated successfully!', 'success');
+                hideEditCohortForm();
+                await loadInstructorCohorts();
+            } catch (error) {
+                showMessage('Failed to update cohort: ' + error.message, 'error');
+            }
+        }
+
+        async function showEditCohortForm(cohortId) {
+            try {
+                const response = await api.getCohort(cohortId);
+                const cohort = response.data.cohort;
+                
+                document.getElementById('editCohortId').value = cohort.id;
+                document.getElementById('editCohortName').value = cohort.name || '';
+                document.getElementById('editCohortDescription').value = cohort.description || '';
+                document.getElementById('editCohortAbout').value = cohort.about || '';
+                document.getElementById('editCohortRequirements').value = cohort.requirements || '';
+                document.getElementById('editCohortLearn').value = cohort.what_you_will_learn || '';
+                
+                document.getElementById('editCohortForm').style.display = 'block';
+                document.getElementById('editCohortForm').scrollIntoView({ behavior: 'smooth' });
+            } catch (error) {
+                showMessage('Failed to load cohort details: ' + error.message, 'error');
+            }
+        }
+
+        function hideEditCohortForm() {
+            document.getElementById('editCohortForm').style.display = 'none';
+            document.getElementById('editCohortFormInner').reset();
         }
 
         async function deleteCohort(cohortId, cohortName) {
@@ -194,10 +326,12 @@
 
         function showCreateCohortForm() {
             document.getElementById('createCohortForm').style.display = 'block';
+            document.getElementById('createCohortForm').scrollIntoView({ behavior: 'smooth' });
         }
 
         function hideCreateCohortForm() {
             document.getElementById('createCohortForm').style.display = 'none';
+            document.getElementById('newCohortForm').reset();
         }
 
         function showMessage(message, type) {

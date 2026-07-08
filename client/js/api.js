@@ -82,7 +82,7 @@ class API {
         window.location.href = '/views/login.html';
     }
 
-    // Auth
+    
     async login(email, password) {
         const data = await this.request('/auth/login', {
             method: 'POST',
@@ -101,7 +101,7 @@ class API {
         return data;
     }
 
-    // User
+    
     async getProfile() {
         return await this.request('/users/profile');
     }
@@ -139,7 +139,7 @@ class API {
         return await this.request('/users');
     }
 
-    // Cohorts
+    
     async getAllCohorts(search = '') {
         const query = search ? `?search=${encodeURIComponent(search)}` : '';
         return await this.request(`/cohorts${query}`);
@@ -158,8 +158,26 @@ class API {
             method: 'POST'
         });
     }
+    async createCohort(data) {
+        return await this.request('/cohorts', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    }
 
-    // Modules
+    async updateCohort(id, data) {
+        return await this.request(`/cohorts/${id}`, {
+            method: 'PATCH',
+            body: JSON.stringify(data)
+        });
+    }
+
+    async deleteCohort(id) {
+        return await this.request(`/cohorts/${id}`, {
+            method: 'DELETE'
+        });
+    }
+   
     async getModules(cohortId) {
         return await this.request(`/modules/cohort/${cohortId}`);
     }
@@ -168,7 +186,7 @@ class API {
         return await this.request(`/modules/${id}`);
     }
 
-    // Quizzes
+    
     async getQuiz(moduleId) {
         return await this.request(`/quizzes/module/${moduleId}`);
     }
@@ -180,7 +198,7 @@ class API {
         });
     }
 
-    // Content Blocks
+    
     async createContentBlock(moduleId, data) {
         return await this.request(`/modules/${moduleId}/content`, {
             method: 'POST',
@@ -194,7 +212,7 @@ class API {
         });
     }
 
-    // Certificates
+    
     async getCertificates() {
         return await this.request('/certificates');
     }
@@ -245,7 +263,7 @@ class API {
         }
     }
 
-    // Discussions
+    
     async getDiscussions(cohortId) {
         return await this.request(`/discussions/cohort/${cohortId}`);
     }
@@ -264,12 +282,12 @@ class API {
         });
     }
 
-    // Announcements
+  
     async getAnnouncements(cohortId) {
         return await this.request(`/announcements/cohort/${cohortId}`);
     }
 
-    // Admin
+  
     async updateUserRole(userId, role) {
         return await this.request(`/users/${userId}/role`, {
             method: 'PATCH',
@@ -305,7 +323,7 @@ class API {
 
 const api = new API();
 
-// Toast notification system
+
 window.showToast = function(icon, title, message, type = 'info') {
     const container = document.getElementById('toastContainer');
     if (!container) {

@@ -49,18 +49,18 @@ class Cohort {
 
   static async create(data) {
     const r = await db.query(
-      `INSERT INTO cohorts (name, description, start_date, end_date, instructor_id, max_students, about, requirements, what_you_will_learn) 
+      `INSERT INTO cohorts (name, description, about, requirements, what_you_will_learn, start_date, end_date, instructor_id, max_students) 
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
-      [data.name, data.description, data.startDate, data.endDate, data.instructorId, data.maxStudents, data.about, data.requirements, data.whatYouWillLearn]
+      [data.name, data.description, data.about, data.requirements, data.whatYouWillLearn, data.startDate, data.endDate, data.instructorId, data.maxStudents]
     );
     return r.rows[0];
   }
 
   static async update(id, data) {
     const fields = []; const vals = []; let i = 1;
-    const allowedFields = ['name','description','is_active','about','requirements','what_you_will_learn'];
+    const allowedFields = ['name','description','about','requirements','what_you_will_learn'];
     for (const [k, v] of Object.entries(data)) {
-      if (allowedFields.includes(k)) {
+      if (allowedFields.includes(k) && v !== undefined) {
         fields.push(`${k}=$${i}`); vals.push(v); i++;
       }
     }
