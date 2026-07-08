@@ -1,1 +1,399 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Courses - CohortHub</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand" onclick="window.location.href='/views/dashboard.html'" style="cursor: pointer;">
+            CohortHub
+        </div>
+        <div class="nav-links">
+            <a href="/views/dashboard.html" class="nav-link">Dashboard</a>
+            <a href="/views/courses.html" class="nav-link active">Browse Courses</a>
+            <a href="/views/certificate.html" class="nav-link">My Certificates</a>
+            <a href="/views/notifications.html" class="nav-link">Notifications</a>
+        </div>
+        <div class="nav-user">
+            <a href="/views/profile.html" class="nav-link" id="userDisplay"></a>
+            <button id="logoutBtn" class="btn-danger">Sign Out</button>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <h1>Discover Courses</h1>
+        <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+            Browse available cohorts and enroll to start learning today
+        </p>
+
+        
+        <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+            <div class="form-group" style="flex: 1; margin: 0;">
+                <input type="text" id="searchInput" placeholder="Search courses by name or description..." style="padding: 0.75rem 1rem;">
+            </div>
+            <button id="searchBtn" class="btn-primary" style="width: auto;">Search</button>
+        </div>
+
+        
+        <div id="coursesList" class="cohorts-grid"></div>
+    </div>
+
+    
+    <div id="toastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; max-width: 400px; width: 100%;"></div>
+
+  
+    <div id="enrollModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9998; align-items: center; justify-content: center;">
+        <div style="background: var(--card); border-radius: 12px; padding: 2.5rem; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); position: relative; animation: modalFadeIn 0.3s ease;">
+            <div style="text-align: center;">
+                <div id="modalIcon" style="font-size: 4rem; margin-bottom: 1rem;">📚</div>
+                <h2 id="modalTitle" style="margin-bottom: 0.5rem;">Enroll in Course</h2>
+                <p id="modalMessage" style="color: var(--text-secondary); margin-bottom: 1.5rem;">Are you sure you want to enroll in this course?</p>
+                <div id="modalCourseName" style="font-weight: 600; color: var(--accent); margin-bottom: 1.5rem;"></div>
+                <div style="display: flex; gap: 1rem; justify-content: center;">
+                    <button id="modalCancelBtn" class="btn-secondary" style="width: auto;">Cancel</button>
+                    <button id="modalConfirmBtn" class="btn-primary" style="width: auto;">Confirm Enrollment</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.9) translateY(-20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes toastSlideIn {
+            from { opacity: 0; transform: translateX(100px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes toastSlideOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(100px); }
+        }
+        .toast-item {
+            animation: toastSlideIn 0.3s ease;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.95rem;
+            border-left: 4px solid;
+        }
+        .toast-item.success {
+            background: #d4edda;
+            border-left-color: #28a745;
+            color: #155724;
+        }
+        .toast-item.error {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+            color: #721c24;
+        }
+        .toast-item.info {
+            background: #cce5ff;
+            border-left-color: #007bff;
+            color: #004085;
+        }
+        .toast-item.warning {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+            color: #856404;
+        }
+        .toast-item .toast-close {
+            margin-left: auto;
+            cursor: pointer;
+            font-weight: 700;
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+        .toast-item .toast-close:hover {
+            opacity: 1;
+        }
+
+        
+        .cohort-about {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+            opacity: 0;
+        }
+
+        .cohort-about.expanded {
+            max-height: 800px;
+            opacity: 1;
+        }
+
+        .about-toggle {
+            cursor: pointer;
+            color: var(--accent);
+            font-weight: 600;
+            background: none;
+            border: none;
+            font-size: 0.9rem;
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            width: 100%;
+            transition: color 0.2s;
+        }
+
+        .about-toggle:hover {
+            color: var(--accent-hover);
+            text-decoration: underline;
+        }
+
+        .lecturer-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--accent-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: var(--accent);
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+    </style>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            const user = checkAuth();
+            if (!user) return;
+
+            document.getElementById('userDisplay').textContent = `${user.firstName} ${user.lastName}`;
+            document.getElementById('logoutBtn').addEventListener('click', function () {
+                api.logout();
+            });
+
+            await loadCourses();
+
+            document.getElementById('searchBtn').addEventListener('click', loadCourses);
+            document.getElementById('searchInput').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') loadCourses();
+            });
+
+           
+            document.getElementById('modalCancelBtn').addEventListener('click', closeModal);
+            document.getElementById('enrollModal').addEventListener('click', function(e) {
+                if (e.target === this) closeModal();
+            });
+        });
+
+        let currentEnrollCohortId = null;
+        let currentEnrollCohortName = '';
+
+        async function loadCourses() {
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            const response = await api.getAllCohorts(searchTerm);
+            const cohorts = response.data.cohorts || [];
+            const container = document.getElementById('coursesList');
+
+            if (cohorts.length === 0) {
+                container.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 3rem; background: var(--card); border-radius: 12px;">
+                        <p style="color: var(--text-secondary); font-size: 1.1rem;">
+                            No courses found${searchTerm ? ` for "${searchTerm}"` : ''}.
+                        </p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = cohorts.map(function (cohort) {
+                const isFull = cohort.enrolled_count >= cohort.max_students;
+                const progress = cohort.progress || 0;
+                
+                
+                const instructorName = cohort.instructor_name || 'Unknown';
+                const initials = instructorName.split(' ').map(n => n[0]).join('').toUpperCase();
+                
+                
+                const aboutText = cohort.about || 'No additional information available.';
+                const requirementsText = cohort.requirements || 'No prerequisites required.';
+                const whatYouWillLearn = cohort.what_you_will_learn || 'Course content details coming soon.';
+                
+                return `
+                    <div class="cohort-card" style="cursor: default;">
+                        <div class="cohort-header">
+                            <h3>${cohort.name}</h3>
+                            <span class="status-badge ${isFull ? 'completed' : 'active'}">${isFull ? 'Full' : 'Open'}</span>
+                        </div>
+                        
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.75rem;">
+                            ${cohort.description || 'No description available.'}
+                        </p>
+                        
+                        <!-- Lecturer Info -->
+                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; padding: 0.5rem; background: var(--surface); border-radius: 6px;">
+                            <div class="lecturer-avatar">${initials}</div>
+                            <div>
+                                <strong style="font-size: 0.9rem;">${instructorName}</strong>
+                                <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0;">Instructor</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Course Details -->
+                        <p style="font-size: 0.85rem; color: var(--text-secondary);">
+                            <strong>Duration:</strong> 
+                            ${new Date(cohort.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - 
+                            ${new Date(cohort.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </p>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+                            <strong>Enrolled:</strong> ${cohort.enrolled_count || 0} / ${cohort.max_students || 30} students
+                        </p>
+                        
+                        <!-- About Toggle -->
+                        <button class="about-toggle" onclick="toggleAbout('about-${cohort.id}')">
+                            <span>📖</span> About this course <span id="arrow-${cohort.id}">▼</span>
+                        </button>
+                        
+                        <div id="about-${cohort.id}" class="cohort-about" style="margin-top: 0.75rem; padding: 0 0.5rem;">
+                            <div style="border-top: 1px solid var(--border); padding-top: 0.75rem;">
+                                <div style="margin-bottom: 0.75rem;">
+                                    <h4 style="font-size: 0.9rem; color: var(--accent); margin-bottom: 0.25rem;">📚 About This Course</h4>
+                                    <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6;">${aboutText}</p>
+                                </div>
+                                
+                                ${requirementsText !== 'No prerequisites required.' ? `
+                                    <div style="margin-bottom: 0.75rem;">
+                                        <h4 style="font-size: 0.9rem; color: var(--accent); margin-bottom: 0.25rem;">📋 Requirements</h4>
+                                        <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6;">${requirementsText}</p>
+                                    </div>
+                                ` : ''}
+                                
+                                <div style="margin-bottom: 0.75rem;">
+                                    <h4 style="font-size: 0.9rem; color: var(--accent); margin-bottom: 0.25rem;">🎯 What You Will Learn</h4>
+                                    <div style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.8; white-space: pre-wrap;">${whatYouWillLearn}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button onclick="openEnrollModal('${cohort.id}', '${cohort.name}')" 
+                                class="btn-primary" 
+                                style="margin-top: 1rem; width: 100%;"
+                                ${isFull ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>
+                            ${isFull ? '📋 Course Full' : '📚 Enroll Now'}
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+    
+        function toggleAbout(aboutId) {
+            const aboutDiv = document.getElementById(aboutId);
+            const arrow = document.getElementById(`arrow-${aboutId.replace('about-', '')}`);
+            
+            if (aboutDiv.classList.contains('expanded')) {
+                aboutDiv.classList.remove('expanded');
+                if (arrow) arrow.textContent = '▼';
+            } else {
+                aboutDiv.classList.add('expanded');
+                if (arrow) arrow.textContent = '▲';
+            }
+        }
+
+        function openEnrollModal(cohortId, cohortName) {
+            currentEnrollCohortId = cohortId;
+            currentEnrollCohortName = cohortName;
+            
+            document.getElementById('modalCourseName').textContent = cohortName;
+            document.getElementById('modalIcon').textContent = '📚';
+            document.getElementById('modalTitle').textContent = 'Confirm Enrollment';
+            document.getElementById('modalMessage').textContent = 'Are you sure you want to enroll in this course?';
+            document.getElementById('enrollModal').style.display = 'flex';
+            
+            
+            document.getElementById('modalConfirmBtn').onclick = confirmEnrollment;
+        }
+
+        function closeModal() {
+            document.getElementById('enrollModal').style.display = 'none';
+            currentEnrollCohortId = null;
+            currentEnrollCohortName = '';
+        }
+
+        async function confirmEnrollment() {
+            if (!currentEnrollCohortId) return;
+            
+            
+            const confirmBtn = document.getElementById('modalConfirmBtn');
+            const originalText = confirmBtn.textContent;
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = '⏳ Enrolling...';
+            
+            try {
+                await api.enrollInCohort(currentEnrollCohortId);
+                
+                
+                closeModal();
+                
+                
+                showToast('🎉', 'Success!', `You have been enrolled in "${currentEnrollCohortName}"`, 'success');
+                
+                
+                await loadCourses();
+                
+            } catch (error) {
+                
+                closeModal();
+                
+                
+                showToast('❌', 'Enrollment Failed', error.message || 'Something went wrong. Please try again.', 'error');
+            } finally {
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = originalText;
+            }
+        }
+
+        
+        function showToast(icon, title, message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast-item ${type}`;
+            
+            const id = 'toast-' + Date.now();
+            toast.id = id;
+            
+            toast.innerHTML = `
+                <span style="font-size: 1.5rem;">${icon}</span>
+                <div style="flex: 1;">
+                    <strong style="display: block;">${title}</strong>
+                    <span style="font-size: 0.9rem;">${message}</span>
+                </div>
+                <button class="toast-close" onclick="dismissToast('${id}')">×</button>
+            `;
+            
+            container.appendChild(toast);
+            
+           
+            setTimeout(() => {
+                dismissToast(id);
+            }, 5000);
+        }
+
+        window.dismissToast = function(id) {
+            const toast = document.getElementById(id);
+            if (toast) {
+                toast.style.animation = 'toastSlideOut 0.3s ease forwards';
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }
+        };
+    </script>
+</body>
+</html>

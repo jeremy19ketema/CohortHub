@@ -1,1 +1,125 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - CohortHub</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand" onclick="window.location.href='/views/dashboard.html'" style="cursor: pointer;">
+            CohortHub
+        </div>
+        <div class="nav-links">
+            <a href="/views/dashboard.html" class="nav-link active">Dashboard</a>
+            <a href="/views/courses.html" class="nav-link">Browse Courses</a>
+            <a href="/views/certificate.html" class="nav-link">My Certificates</a>
+            <a href="/views/notifications.html" class="nav-link">Notifications</a>
+        </div>
+        <div class="nav-user">
+            <a href="/views/profile.html" class="nav-link" id="userDisplay"></a>
+            <button id="logoutBtn" class="btn-danger">Sign Out</button>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div id="welcomeSection" style="margin-bottom: 2rem;">
+            <h1>Welcome, <span id="welcomeName"></span>! 🎉</h1>
+            <p id="welcomeMessage" style="color: var(--text-secondary);">Your learning journey starts here. Enroll in a course to begin.</p>
+        </div>
+
+        <div id="statsGrid" class="stats-grid"></div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2>My Enrolled Cohorts</h2>
+            <a href="/views/courses.html" class="btn-secondary" style="width: auto; padding: 0.5rem 1rem; font-size: 0.875rem;">
+                + Browse More Courses
+            </a>
+        </div>
+        <div id="cohortsList" class="cohorts-grid"></div>
+
+        <div id="discoverSection" style="display: none; margin-top: 2rem;">
+            <div class="discover-banner">
+                <h2>Start Your Learning Journey</h2>
+                <p>Discover courses tailored to your interests and advance your career</p>
+                <a href="/views/courses.html" class="btn-primary" style="width: auto; display: inline-block; text-decoration: none; background: white; color: var(--accent);">
+                    Browse Available Courses
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div id="toastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; max-width: 400px; width: 100%;"></div>
+
+    <style>
+        @keyframes toastSlideIn {
+            from { opacity: 0; transform: translateX(100px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes toastSlideOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(100px); }
+        }
+        .toast-item {
+            animation: toastSlideIn 0.3s ease;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.95rem;
+            border-left: 4px solid;
+            background: white;
+        }
+        .toast-item.success {
+            background: #d4edda;
+            border-left-color: #28a745;
+            color: #155724;
+        }
+        .toast-item.error {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+            color: #721c24;
+        }
+        .toast-item.info {
+            background: #cce5ff;
+            border-left-color: #007bff;
+            color: #004085;
+        }
+        .toast-item.warning {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+            color: #856404;
+        }
+        .toast-item .toast-close {
+            margin-left: auto;
+            cursor: pointer;
+            font-weight: 700;
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+            color: inherit;
+        }
+        .toast-item .toast-close:hover {
+            opacity: 1;
+        }
+
+        
+        .discover-banner .btn-primary {
+            background: var(--accent) !important;
+            color: white !important;
+        }
+        .discover-banner .btn-primary:hover {
+            background: var(--accent-hover) !important;
+        }
+    </style>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/dashboard.js"></script>
+</body>
+</html>
